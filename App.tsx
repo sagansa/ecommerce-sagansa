@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -14,8 +14,7 @@ import ShoppingCart from './components/ShoppingCart';
 import ProductDetailModal from './components/ProductDetailModal';
 import AuthModal from './components/AuthModal';
 import { Product, CartItem, User } from './types';
-import { MOCK_ORDERS } from './constants';
-import { fetchProducts } from './services/api';
+import { PRODUCTS, MOCK_ORDERS } from './constants';
 
 type Page = 'home' | 'shop' | 'checkout' | 'about' | 'contact' | 'orders' | 'profile' | 'wishlist';
 type AuthMode = 'login' | 'register';
@@ -25,40 +24,11 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productsLoading, setProductsLoading] = useState<boolean>(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
-
-  const loadProducts = useCallback(async (signal?: AbortSignal) => {
-    setProductsError(null);
-    setProductsLoading(true);
-
-    try {
-      const data = await fetchProducts({ signal });
-      setProducts(data);
-    } catch (error) {
-      const isAbortError =
-        error instanceof DOMException && error.name === 'AbortError';
-
-      if (isAbortError) {
-        return;
-      }
-
-      const message =
-        error instanceof Error ? error.message : 'Failed to load products.';
-      setProductsError(message);
-    } finally {
-      setProductsLoading(false);
-    }
-  }, []);
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const handleRetryLoadProducts = useCallback(() => {
-    void loadProducts();
-  }, [loadProducts]);
   
   // Load state from localStorage on initial render
   useEffect(() => {
@@ -67,44 +37,18 @@ const App: React.FC = () => {
       if (savedUser) {
         setUser(JSON.parse(savedUser));
       }
-
       const savedCart = localStorage.getItem('cartItems');
       if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        if (Array.isArray(parsedCart)) {
-          setCartItems(
-            parsedCart.map((item: CartItem) => ({
-              ...item,
-              id: String(item.id),
-            }))
-          );
-        }
+        setCartItems(JSON.parse(savedCart));
       }
-
       const savedWishlist = localStorage.getItem('wishlistItems');
       if (savedWishlist) {
-        const parsedWishlist = JSON.parse(savedWishlist);
-        if (Array.isArray(parsedWishlist)) {
-          setWishlistItems(
-            parsedWishlist.map((item: Product) => ({
-              ...item,
-              id: String(item.id),
-            }))
-          );
-        }
+        setWishlistItems(JSON.parse(savedWishlist));
       }
     } catch (error) {
-      console.error('Failed to parse from localStorage', error);
+      console.error("Failed to parse from localStorage", error);
     }
   }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void loadProducts(controller.signal);
-
-    return () => controller.abort();
-  }, [loadProducts]);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -141,7 +85,7 @@ const App: React.FC = () => {
     setIsCartOpen(true);
   };
 
-  const handleUpdateCartQuantity = (productId: string, newQuantity: number) => {
+  const handleUpdateCartQuantity = (productId: number, newQuantity: number) => {
     if (newQuantity < 1) {
       handleRemoveFromCart(productId);
       return;
@@ -153,7 +97,7 @@ const App: React.FC = () => {
     );
   };
 
-  const handleRemoveFromCart = (productId: string) => {
+  const handleRemoveFromCart = (productId: number) => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
   };
 
@@ -202,34 +146,9 @@ const App: React.FC = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return (
-          <HomePage
-            products={products}
-            user={user}
-            onNavigateToShop={() => handleNavigate('shop')}
-            onAddToCart={handleAddToCart}
-            onViewDetails={setSelectedProduct}
-            onToggleWishlist={handleToggleWishlist}
-            wishlistItems={wishlistItems}
-            productsLoading={productsLoading}
-            productsError={productsError}
-            onReloadProducts={handleRetryLoadProducts}
-          />
-        );
+        return <HomePage products={PRODUCTS} user={user} onNavigateToShop={() => handleNavigate('shop')} onAddToCart={handleAddToCart} onViewDetails={setSelectedProduct} onToggleWishlist={handleToggleWishlist} wishlistItems={wishlistItems} />;
       case 'shop':
-        return (
-          <ShopPage
-            products={products}
-            user={user}
-            onAddToCart={handleAddToCart}
-            onViewDetails={setSelectedProduct}
-            onToggleWishlist={handleToggleWishlist}
-            wishlistItems={wishlistItems}
-            isLoading={productsLoading}
-            error={productsError}
-            onRetry={handleRetryLoadProducts}
-          />
-        );
+        return <ShopPage products={PRODUCTS} user={user} onAddToCart={handleAddToCart} onViewDetails={setSelectedProduct} onToggleWishlist={handleToggleWishlist} wishlistItems={wishlistItems} />;
       case 'checkout':
         return <CheckoutPage cartItems={cartItems} />;
       case 'about':
@@ -241,31 +160,9 @@ const App: React.FC = () => {
       case 'profile':
         return <UserProfilePage user={user} onUpdateUser={handleUpdateUser} />;
       case 'wishlist':
-        return (
-          <WishlistPage
-            wishlistItems={wishlistItems}
-            onAddToCart={handleAddToCart}
-            onViewDetails={setSelectedProduct}
-            onToggleWishlist={handleToggleWishlist}
-            onNavigateToShop={() => handleNavigate('shop')}
-            user={user}
-          />
-        );
+        return <WishlistPage wishlistItems={wishlistItems} onAddToCart={handleAddToCart} onViewDetails={setSelectedProduct} onToggleWishlist={handleToggleWishlist} onNavigateToShop={() => handleNavigate('shop')} user={user} />;
       default:
-        return (
-          <HomePage
-            products={products}
-            user={user}
-            onNavigateToShop={() => handleNavigate('shop')}
-            onAddToCart={handleAddToCart}
-            onViewDetails={setSelectedProduct}
-            onToggleWishlist={handleToggleWishlist}
-            wishlistItems={wishlistItems}
-            productsLoading={productsLoading}
-            productsError={productsError}
-            onReloadProducts={handleRetryLoadProducts}
-          />
-        );
+        return <HomePage products={PRODUCTS} user={user} onNavigateToShop={() => handleNavigate('shop')} onAddToCart={handleAddToCart} onViewDetails={setSelectedProduct} onToggleWishlist={handleToggleWishlist} wishlistItems={wishlistItems} />;
     }
   };
 

@@ -11,9 +11,6 @@ interface HomePageProps {
   onViewDetails: (product: Product) => void;
   onToggleWishlist: (product: Product) => void;
   wishlistItems: Product[];
-  productsLoading: boolean;
-  productsError: string | null;
-  onReloadProducts: () => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
@@ -23,10 +20,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onAddToCart, 
   onViewDetails,
   onToggleWishlist,
-  wishlistItems,
-  productsLoading,
-  productsError,
-  onReloadProducts,
+  wishlistItems
 }) => {
   const featuredProducts = products.slice(0, 4); // Show first 4 products as featured
 
@@ -40,9 +34,6 @@ const HomePage: React.FC<HomePageProps> = ({
         onViewDetails={onViewDetails}
         onToggleWishlist={onToggleWishlist}
         wishlistItems={wishlistItems}
-        isLoading={productsLoading}
-        error={productsError}
-        onRetry={onReloadProducts}
       />
     </main>
   );

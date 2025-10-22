@@ -1,13 +1,11 @@
 // FIX: Implemented missing type definitions.
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   description: string;
   price: number;
-  imageUrl: string | null;
+  imageUrl: string;
   category: string;
-  slug?: string;
-  stock?: number;
 }
 
 export interface CartItem extends Product {

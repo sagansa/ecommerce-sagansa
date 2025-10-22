@@ -6,8 +6,8 @@ interface ShoppingCartProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, newQuantity: number) => void;
-  onRemoveItem: (productId: string) => void;
+  onUpdateQuantity: (productId: number, newQuantity: number) => void;
+  onRemoveItem: (productId: number) => void;
   onNavigateToShop: () => void;
   onProceedToCheckout: () => void;
 }
