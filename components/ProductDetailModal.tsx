@@ -11,8 +11,27 @@ interface ProductDetailModalProps {
   isInWishlist: boolean;
 }
 
-const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, user, onClose, onAddToCart, onToggleWishlist, isInWishlist }) => {
+const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
+  product,
+  user,
+  onClose,
+  onAddToCart,
+  onToggleWishlist,
+  isInWishlist,
+}) => {
   const [quantity, setQuantity] = useState(1);
+  const fallbackImage = React.useMemo(() => {
+    if (!product) {
+      return null;
+    }
+    const truncatedName = product.name ? product.name.slice(0, 32) : 'Product';
+    const safeText = truncatedName
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='800' height='600' fill='#f5f5f4'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#78716c' font-family='Helvetica, Arial, sans-serif' font-size='32' font-weight='600'>${safeText}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }, [product]);
 
   if (!product) {
     return null;
@@ -39,8 +58,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, user, 
         >
           <XMarkIcon className="h-7 w-7" />
         </button>
-        <div className="w-full md:w-1/2">
-          <img src={product.imageUrl} alt={product.name} className="w-full h-64 md:h-full object-cover"/>
+        <div className="w-full md:w-1/2 bg-stone-100">
+          <img
+            src={product.imageUrl ?? fallbackImage ?? ''}
+            alt={product.name}
+            className="w-full h-64 md:h-full object-cover"
+          />
         </div>
         <div className="w-full md:w-1/2 p-8 flex flex-col overflow-y-auto">
           <p className="text-sm font-semibold text-amber-700">{product.category}</p>

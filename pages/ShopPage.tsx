@@ -9,13 +9,77 @@ interface ShopPageProps {
   onViewDetails: (product: Product) => void;
   onToggleWishlist: (product: Product) => void;
   wishlistItems: Product[];
+  isLoading: boolean;
+  error: string | null;
+  onRetry: () => void;
 }
 
-const ShopPage: React.FC<ShopPageProps> = ({ products, user, onAddToCart, onViewDetails, onToggleWishlist, wishlistItems }) => {
+const ShopPage: React.FC<ShopPageProps> = ({
+  products,
+  user,
+  onAddToCart,
+  onViewDetails,
+  onToggleWishlist,
+  wishlistItems,
+  isLoading,
+  error,
+  onRetry,
+}) => {
   const [filter, setFilter] = useState('All');
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
 
   const filteredProducts = filter === 'All' ? products : products.filter(p => p.category === filter);
+
+    let content: React.ReactNode;
+
+    if (isLoading) {
+      content = (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={`shop-loading-${index}`}
+              className="h-80 rounded-lg bg-white/60 border border-stone-200 animate-pulse"
+            />
+          ))}
+        </div>
+      );
+    } else if (error) {
+      content = (
+        <div className="bg-white border border-red-200 rounded-lg p-8 text-center">
+          <p className="text-red-600 font-semibold mb-3">{error}</p>
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-amber-800 text-white rounded-md shadow hover:bg-amber-900 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    } else if (filteredProducts.length === 0) {
+      content = (
+        <div className="bg-white border border-stone-200 rounded-lg p-8 text-center text-stone-500">
+          {products.length === 0
+            ? 'Products will appear here once they are available.'
+            : 'No products match the selected category.'}
+        </div>
+      );
+    } else {
+      content = (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {filteredProducts.map(product => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              user={user}
+              onAddToCart={onAddToCart}
+              onViewDetails={onViewDetails}
+              onToggleWishlist={onToggleWishlist}
+              isInWishlist={wishlistItems.some(item => item.id === product.id)}
+            />
+          ))}
+        </div>
+      );
+    }
 
   return (
     <div className="bg-stone-50 min-h-screen">
@@ -43,19 +107,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ products, user, onAddToCart, onView
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map(product => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              user={user}
-              onAddToCart={onAddToCart}
-              onViewDetails={onViewDetails}
-              onToggleWishlist={onToggleWishlist}
-              isInWishlist={wishlistItems.some(item => item.id === product.id)}
-            />
-          ))}
-        </div>
+        {content}
       </div>
     </div>
   );

@@ -11,12 +11,31 @@ interface ProductCardProps {
   isInWishlist: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, user, onAddToCart, onViewDetails, onToggleWishlist, isInWishlist }) => {
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  user,
+  onAddToCart,
+  onViewDetails,
+  onToggleWishlist,
+  isInWishlist,
+}) => {
+  const fallbackImage = React.useMemo(() => {
+    const truncatedName = product.name ? product.name.slice(0, 24) : 'Product';
+    const safeText = truncatedName
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='420'><rect width='600' height='420' fill='#f5f5f4'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#78716c' font-family='Helvetica, Arial, sans-serif' font-size='24' font-weight='600'>${safeText}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }, [product.name]);
+
+  const imageSource = product.imageUrl ?? fallbackImage;
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="relative">
         <img 
-          src={product.imageUrl} 
+          src={imageSource} 
           alt={product.name}
           className="w-full h-56 object-cover cursor-pointer"
           onClick={() => onViewDetails(product)}
